@@ -396,6 +396,35 @@ namespace ServiceNowWebDriverExtensions
 
                 wait.Until(ExpectedConditions.ElementIsVisible(By.LinkText("Run"))).Click();
             }
+
+            /// <summary>
+            /// Impersonate another system user.
+            /// </summary>
+            /// <param name="driver"></param>
+            /// <param name="fortext">User identifying information i.e. user id, name, etc.</param>
+            public static void Impersonate(this IWebDriver driver, string fortext)
+            {
+                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(15));
+                wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("#impersonate_span > img"))).Click();
+                wait.Until(ExpectedConditions.ElementIsVisible(By.Id("lookup.QUERY:active=true^locked_out=false"))).Click();
+
+                wait.Until(ExpectedConditions.ElementIsVisible(By.Id("sys_display.QUERY:active=true^locked_out=false"))).Click();
+
+                string currentWindowHandle = driver.CurrentWindowHandle;
+                string searchWindow = driver.WindowHandles.First(o => o != currentWindowHandle);
+                driver.SwitchTo().Window(searchWindow);
+
+                driver.Search("for text", fortext);
+                System.Threading.Thread.Sleep(1000);
+
+                // First Record hyperlink
+                wait.Until(ExpectedConditions.ElementIsVisible(By.Id("sys_user_table"))).FindElements(By.CssSelector("td:nth-child(2) > a")).First().Click();
+
+                driver.SwitchTo().Window(currentWindowHandle);
+                driver.SwitchTo().DefaultContent();
+
+                wait.Until(ExpectedConditions.ElementIsVisible(By.Id("ok_button"))).Click();
+            }
         }
     }
 }
